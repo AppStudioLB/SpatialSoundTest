@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>공간 음향 테스트</title>
+    <meta name="viewport" content="width=device-width">
+    <style>
+        /* 버튼 기본 스타일 */
+        button {
+            background-color: #4CAF50; /* 녹색 배경 */
+            border: none; /* 테두리 없음 */
+            color: white; /* 텍스트 색상 */
+            padding: 15px 32px; /* 상하 15px, 좌우 32px 패딩 */
+            text-align: center; /* 텍스트 가운데 정렬 */
+            text-decoration: none; /* 텍스트 밑줄 없음 */
+            display: inline-block; /* 인라인 블록으로 표시 */
+            font-size: 16px; /* 글꼴 크기 */
+            margin: 4px 2px; /* 마진 */
+            cursor: pointer; /* 마우스 오버시 커서 변경 */
+            transition-duration: 0.4s; /* 호버 효과 지속 시간 */
+            border-radius: 12px; /* 버튼 모서리 둥글게 */
+        }
+
+        /* 버튼 위에 마우스를 올렸을 때의 스타일 */
+        button:hover {
+            background-color: white; /* 배경 색상을 흰색으로 */
+            color: #4CAF50; /* 글자 색상을 녹색으로 */
+            border: 2px solid #4CAF50; /* 녹색 테두리 추가 */
+        }
+        canvas {
+            border: 1px solid black; /* 캔버스 테두리를 검정색으로 설정 */
+        }
+    </style>
+</head>
+<body>
+
+  <div class="ui" text-align="center">
+  <h1 text-align= "center">공간 음향 테스트</h1>
+  <canvas id="canvas"></canvas>
+  <button>Play</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+  <script>
+      document.querySelector('button').addEventListener('click', async () => {
+          if (Tone.Transport.state !== 'started') {
+              await Tone.Transport.start();
+          }
+  
+          // 음악 및 효과 생성
+          const pingPong = new Tone.PingPongDelay("4n", 0.2).toDestination();
+          const drum = new Tone.MembraneSynth().connect(pingPong);
+          drum.triggerAttackRelease("C4", "8n");
+  
+          visualize();
+      });
+  
+      function visualize() {
+          const canvas = document.getElementById("canvas");
+          const ctx = canvas.getContext("2d");
+          canvas.width = 400;
+          canvas.height = 300;
+  
+          const analyser = new Tone.FFT(32);
+          Tone.Master.connect(analyser);
+  
+          function draw() {
+              requestAnimationFrame(draw);
+  
+              const values = analyser.getValue();
+              ctx.fillStyle = 'rgb(0, 0, 0)';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+              const barWidth = (canvas.width / values.length) * 2.5;
+              let barHeight;
+              let x = 0;
+  
+              for(let i = 0; i < values.length; i++) {
+                  barHeight = (values[i] + 140) * 2; // 값 조정 필요
+  
+                  ctx.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
+                  ctx.fillRect(x,canvas.height-barHeight/2,barWidth,barHeight/2);
+  
+                  x += barWidth + 1;
+              }
+          }
+  
+          draw();
+      }
+  </script>
+  
+  </body>
+  </html>
